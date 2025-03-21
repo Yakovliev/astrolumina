@@ -361,7 +361,8 @@ def create_hr_diagram_improved(star_df):
             color='gold',
             line=dict(width=2, color='orange'),
             symbol='star'
-        )
+        ),
+        textfont=dict(color='gold')  # Make Sun text visible
     ))
 
     # Add famous stars with their properties
@@ -384,7 +385,8 @@ def create_hr_diagram_improved(star_df):
                 size=10,
                 color=props['color'],
                 symbol='star'
-            )
+            ),
+            textfont=dict(color=props['color'])  # Use matching color for text
         ))
 
     # Improve layout
@@ -392,28 +394,37 @@ def create_hr_diagram_improved(star_df):
         template='plotly_dark',
         title={
             'text': 'Interactive Hertzsprung-Russell Diagram',
-            'font': {'size': 24}
+            'font': {'size': 24, 'color': 'white'}  # Ensure title is visible
         },
         title_x=0.5,
         xaxis=dict(
             title='Temperature (K)',
             autorange='reversed',
-            gridcolor='rgba(128, 128, 128, 0.2)'
+            gridcolor='rgba(128, 128, 128, 0.2)',
+            title_font=dict(color='white'),  # Make axis title visible
+            tickfont=dict(color='white')  # Make tick labels visible
         ),
         yaxis=dict(
             title='Absolute Magnitude (Mv)',
             autorange='reversed',
-            gridcolor='rgba(128, 128, 128, 0.2)'
+            gridcolor='rgba(128, 128, 128, 0.2)',
+            title_font=dict(color='white'),  # Make axis title visible
+            tickfont=dict(color='white'),  # Make tick labels visible
+            # Make zero line less prominent
+            zerolinecolor='rgba(100, 100, 100, 0.4)',
+            zerolinewidth=1
         ),
         legend=dict(
             title='Star Type',
             bordercolor='rgba(255, 255, 255, 0.3)',
-            borderwidth=1
+            borderwidth=1,
+            font=dict(color='white'),  # Make legend text visible
+            title_font=dict(color='white')  # Make legend title visible
         ),
         plot_bgcolor='rgb(10, 10, 35)',
         paper_bgcolor='rgb(5, 5, 25)',
-        height=700,
-        width=900
+        height=600,  # Reduced height
+        width=750,   # Reduced width for better proportions
     )
 
     # Add main sequence line (simplified)
@@ -428,16 +439,16 @@ def create_hr_diagram_improved(star_df):
         name='Main Sequence'
     ))
 
-    # Add simple annotations for star types
+    # Add simple annotations for star types - ensure all text is visible with appropriate colors
     annotations = [
         dict(x=25000, y=-3, text="Blue Giants",
-             showarrow=False, font=dict(color="lightblue")),
+             showarrow=False, font=dict(color="lightblue", size=12)),
         dict(x=4000, y=-3, text="Red Giants",
-             showarrow=False, font=dict(color="lightcoral")),
+             showarrow=False, font=dict(color="lightcoral", size=12)),
         dict(x=15000, y=2, text="Main Sequence",
-             showarrow=False, font=dict(color="white")),
+             showarrow=False, font=dict(color="white", size=12)),
         dict(x=10000, y=12, text="White Dwarfs",
-             showarrow=False, font=dict(color="white"))
+             showarrow=False, font=dict(color="white", size=12))
     ]
 
     for annotation in annotations:
