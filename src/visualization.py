@@ -282,3 +282,165 @@ def create_hr_diagram(star_df):
         )
 
     return fig
+
+
+def create_scatter_matrix(star_df):
+    numeric_features = [
+        'Temperature (K)', 'Luminosity(L/Lo)', 'Radius(R/Ro)', 'Absolute magnitude(Mv)']
+
+    # Create the scatter matrix with improved parameters
+    fig = px.scatter_matrix(
+        star_df,
+        dimensions=numeric_features,
+        color='Spectral Class',
+        title='Scatter Matrix of Star Features',
+        opacity=0.7,  # Slightly higher opacity for better visibility
+        height=900,   # Increased height for better clarity
+        width=1000,   # Width to maintain proportion
+        color_discrete_sequence=px.colors.qualitative.Bold,  # Better color scheme
+        labels={col: col.split('(')[0].strip()
+                for col in numeric_features}  # Shorter axis labels
+    )
+
+    fig.update_layout(
+        template=template,
+        title_x=0.5,
+        title_font=dict(size=20),  # Larger title font
+        font=dict(size=12),        # Larger overall font size
+        dragmode='select',         # Enable box select mode
+        margin=dict(l=50, r=50, t=80, b=50)  # Adjust margins for better layout
+    )
+
+    # Improve marker appearance
+    fig.update_traces(
+        marker=dict(
+            size=6,                # Slightly larger points
+            # Add thin line around markers for definition
+            line=dict(width=0.5),
+            symbol='circle'        # Consistent symbol
+        ),
+        diagonal_visible=True      # Ensure diagonals are visible
+    )
+
+    # Improve readability of axis titles
+    for axis in fig.layout:
+        if axis.startswith('xaxis') or axis.startswith('yaxis'):
+            fig.layout[axis].title.font.size = 14
+
+    # Add grid lines for better readability
+    fig.update_xaxes(showgrid=True, gridwidth=0.5,
+                     gridcolor='rgba(128,128,128,0.2)')
+    fig.update_yaxes(showgrid=True, gridwidth=0.5,
+                     gridcolor='rgba(128,128,128,0.2)')
+
+    return fig
+
+
+def create_hr_diagram_improved(star_df):
+    # Create base scatter plot
+    fig = px.scatter(
+        star_df,
+        x='Temperature (K)',
+        y='Absolute magnitude(Mv)',
+        color='Star type',
+        title='Hertzsprung-Russell Diagram',
+        opacity=0.8,
+        color_discrete_sequence=px.colors.qualitative.Vivid
+    )
+
+    # Add the Sun with improved marker
+    fig.add_trace(go.Scatter(
+        x=[5778],
+        y=[4.83],
+        mode='markers+text',
+        name='Sun',
+        text=['Sun'],
+        textposition='top center',
+        marker=dict(
+            size=12,
+            color='gold',
+            line=dict(width=2, color='orange'),
+            symbol='star'
+        )
+    ))
+
+    # Add famous stars with their properties
+    famous_stars = {
+        'Sirius': {'temp': 9940, 'mag': 1.42, 'color': 'rgb(170, 170, 255)'},
+        'Betelgeuse': {'temp': 3600, 'mag': -5.85, 'color': 'rgb(255, 100, 50)'},
+        'Vega': {'temp': 9602, 'mag': 0.58, 'color': 'rgb(200, 200, 255)'},
+        'Proxima Centauri': {'temp': 3042, 'mag': 15.6, 'color': 'rgb(255, 120, 100)'},
+    }
+
+    for star, props in famous_stars.items():
+        fig.add_trace(go.Scatter(
+            x=[props['temp']],
+            y=[props['mag']],
+            mode='markers+text',
+            name=star,
+            text=[star],
+            textposition='top right',
+            marker=dict(
+                size=10,
+                color=props['color'],
+                symbol='star'
+            )
+        ))
+
+    # Improve layout
+    fig.update_layout(
+        template='plotly_dark',
+        title={
+            'text': 'Interactive Hertzsprung-Russell Diagram',
+            'font': {'size': 24}
+        },
+        title_x=0.5,
+        xaxis=dict(
+            title='Temperature (K)',
+            autorange='reversed',
+            gridcolor='rgba(128, 128, 128, 0.2)'
+        ),
+        yaxis=dict(
+            title='Absolute Magnitude (Mv)',
+            autorange='reversed',
+            gridcolor='rgba(128, 128, 128, 0.2)'
+        ),
+        legend=dict(
+            title='Star Type',
+            bordercolor='rgba(255, 255, 255, 0.3)',
+            borderwidth=1
+        ),
+        plot_bgcolor='rgb(10, 10, 35)',
+        paper_bgcolor='rgb(5, 5, 25)',
+        height=700,
+        width=900
+    )
+
+    # Add main sequence line (simplified)
+    main_sequence_temps = [30000, 20000, 10000, 7500, 6000, 5000, 3500]
+    main_sequence_mags = [-5, -2.5, 0, 2, 4, 6, 9]
+
+    fig.add_trace(go.Scatter(
+        x=main_sequence_temps,
+        y=main_sequence_mags,
+        mode='lines',
+        line=dict(dash='solid', width=2, color='white'),
+        name='Main Sequence'
+    ))
+
+    # Add simple annotations for star types
+    annotations = [
+        dict(x=25000, y=-3, text="Blue Giants",
+             showarrow=False, font=dict(color="lightblue")),
+        dict(x=4000, y=-3, text="Red Giants",
+             showarrow=False, font=dict(color="lightcoral")),
+        dict(x=15000, y=2, text="Main Sequence",
+             showarrow=False, font=dict(color="white")),
+        dict(x=10000, y=12, text="White Dwarfs",
+             showarrow=False, font=dict(color="white"))
+    ]
+
+    for annotation in annotations:
+        fig.add_annotation(annotation)
+
+    return fig

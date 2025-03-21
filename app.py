@@ -4,10 +4,9 @@ import pandas as pd
 # Import functions from our modules
 from src.data_processing import load_star_data
 from src.visualization import (
-    create_star_type_bar_chart,
-    create_star_color_bar_chart,
     create_boxplots,
-    create_hr_diagram
+    create_hr_diagram_improved,
+    create_scatter_matrix
 )
 
 # Page configuration
@@ -45,66 +44,12 @@ except Exception as e:
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Select a visualization:",
-    ["📊 Star Types", "🎨 Star Colors", "📏 Physical Properties", "🌠 HR Diagram"]
+    ["📏 Physical Properties", "🌠 HR Diagram",
+        "📊 Feature Correlations"]
 )
 
 # Display different pages based on selection
-if page == "📊 Star Types":
-    st.header("Star Types Distribution")
-    st.markdown("""
-    This visualization shows the distribution of different star types in our dataset.
-    Each bar represents the count of stars belonging to a specific star type.
-    """)
-
-    fig = create_star_type_bar_chart(df)
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Additional information
-    st.subheader("About Star Types")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("""
-        **Main Sequence Stars**: The majority of stars, including our Sun, are main sequence stars. 
-        They fuse hydrogen into helium in their cores.
-        
-        **Red Dwarfs**: These are the most common type of star in the Milky Way. They're small, cool, and have long lifespans.
-        
-        **White Dwarfs**: These are remnants of stars that have exhausted their nuclear fuel.
-        """)
-
-    with col2:
-        st.markdown("""
-        **Brown Dwarfs**: Objects too large to be classified as planets but too small to sustain hydrogen fusion.
-        
-        **Supergiants**: These are massive stars that have evolved away from the main sequence.
-        
-        **Hypergiants**: These are extremely massive and luminous stars, among the most massive and luminous known.
-        """)
-
-elif page == "🎨 Star Colors":
-    st.header("Star Colors Distribution")
-    st.markdown("""
-    This visualization shows the distribution of different star colors in our dataset.
-    The color of a star is primarily determined by its surface temperature.
-    """)
-
-    fig = create_star_color_bar_chart(df)
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Additional information about star colors
-    st.subheader("What Determines a Star's Color?")
-    st.markdown("""
-    The color of a star is primarily determined by its surface temperature:
-    
-    - **Blue/Blue-White stars** (>10,000K): The hottest stars appear blue or blue-white.
-    - **White stars** (~8,000K): Stars like Sirius appear white.
-    - **Yellow/Yellow-White stars** (~6,000K): Stars like our Sun appear yellow or yellow-white.
-    - **Orange stars** (~4,000K): Cooler stars appear orange.
-    - **Red stars** (<3,500K): The coolest stars appear red.
-    """)
-
-elif page == "📏 Physical Properties":
+if page == "📏 Physical Properties":
     st.header("Physical Properties by Star Type")
     st.markdown("""
     These box plots show the distribution of key physical properties across different star types.
@@ -133,7 +78,7 @@ elif page == "🌠 HR Diagram":
     This diagram helps astronomers classify stars and understand stellar evolution.
     """)
 
-    fig = create_hr_diagram(df)
+    fig = create_hr_diagram_improved(df)
     st.plotly_chart(fig, use_container_width=True)
 
     # HR Diagram explanation
@@ -147,6 +92,33 @@ elif page == "🌠 HR Diagram":
     - **Supergiants**: Extremely bright stars at the top of the diagram.
     
     A star's position on this diagram tells us about its age, mass, and evolutionary stage.
+    """)
+
+elif page == "📊 Feature Correlations":
+    st.header("Star Feature Correlations")
+    st.markdown("""
+    This scatter matrix shows the relationships between key stellar properties.
+    Each plot shows the correlation between two properties, allowing you to see
+    patterns and relationships in the data.
+    
+    Points are colored by spectral class to highlight how different types of stars
+    cluster in different regions of the feature space.
+    """)
+
+    fig = create_scatter_matrix(df)
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Scatter matrix explanation
+    st.subheader("Interpreting the Scatter Matrix")
+    st.markdown("""
+    A scatter matrix is a powerful way to visualize multiple relationships at once:
+    
+    - The **diagonal** shows the distribution of each feature
+    - Each **off-diagonal plot** shows the relationship between two features
+    - **Clusters** of similarly colored points indicate stars of the same spectral class sharing similar properties
+    - **Trends** (like diagonal patterns) show correlated features
+    
+    For example, you can observe how temperature and luminosity are related, or how radius correlates with absolute magnitude.
     """)
 
 # Footer
