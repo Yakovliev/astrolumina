@@ -423,8 +423,8 @@ def create_hr_diagram_improved(star_df):
         ),
         plot_bgcolor='rgb(10, 10, 35)',
         paper_bgcolor='rgb(5, 5, 25)',
-        height=600,  # Reduced height
-        width=750,   # Reduced width for better proportions
+        height=700,  # Reduced height
+        width=900,   # Reduced width for better proportions
     )
 
     # Add main sequence line (simplified)
