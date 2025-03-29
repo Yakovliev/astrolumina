@@ -1,13 +1,21 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # Import functions from our modules
-from src.data_processing import load_star_data
+from src.firebase_config import initialize_firebase
+from src.firestore_manager import FirestoreManager
 from src.visualization import (
     create_boxplots,
     create_hr_diagram_improved,
     create_scatter_matrix
 )
+
+# Initialize Firebase
+initialize_firebase()
+
+# Initialize Firestore Manager
+firestore_mgr = FirestoreManager()
 
 # Page configuration
 st.set_page_config(
@@ -30,7 +38,19 @@ colors, and their physical properties.
 
 @st.cache_data
 def get_data():
-    return load_star_data()
+    """Load star data from Firestore with caching for performance."""
+    try:
+        df = firestore_mgr.get_all_stars()
+        if df.empty:
+            st.warning(
+                "No data found in Firestore. Please run the data migration script.")
+            # Fallback to CSV if Firestore is empty
+            from src.data_processing import load_star_data
+            df = load_star_data(use_firestore=False)
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        st.stop()
 
 
 try:
@@ -40,12 +60,30 @@ except Exception as e:
     st.error(f"Error loading data: {e}")
     st.stop()
 
+# Add sidebar for filters
+st.sidebar.title("Filters")
+star_types = ['All'] + firestore_mgr.get_unique_values('Star type')
+selected_star_type = st.sidebar.selectbox("Filter by Star Type", star_types)
+
+star_colors = ['All'] + firestore_mgr.get_unique_values('Star color')
+selected_star_color = st.sidebar.selectbox("Filter by Star Color", star_colors)
+
+# Apply filters
+filtered_df = df.copy()
+if selected_star_type != 'All':
+    filtered_df = filtered_df[filtered_df['Star type'] == selected_star_type]
+if selected_star_color != 'All':
+    filtered_df = filtered_df[filtered_df['Star color'] == selected_star_color]
+
+# Display filter statistics
+if selected_star_type != 'All' or selected_star_color != 'All':
+    st.sidebar.markdown(f"**Showing {len(filtered_df)} of {len(df)} stars**")
+
 # Sidebar for navigation
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Select a visualization:",
-    ["📏 Physical Properties", "🌠 HR Diagram",
-        "📊 Feature Correlations"]
+    ["📏 Physical Properties", "🌠 HR Diagram", "📊 Feature Correlations"]
 )
 
 # Display different pages based on selection
@@ -57,7 +95,7 @@ if page == "📏 Physical Properties":
     vary between different categories of stars.
     """)
 
-    fig = create_boxplots(df)
+    fig = create_boxplots(filtered_df)
     st.plotly_chart(fig, use_container_width=True)
 
     # Explanation of each property
@@ -78,7 +116,7 @@ elif page == "🌠 HR Diagram":
     This diagram helps astronomers classify stars and understand stellar evolution.
     """)
 
-    fig = create_hr_diagram_improved(df)
+    fig = create_hr_diagram_improved(filtered_df)
     st.plotly_chart(fig, use_container_width=True)
 
     # HR Diagram explanation
@@ -105,7 +143,7 @@ elif page == "📊 Feature Correlations":
     cluster in different regions of the feature space.
     """)
 
-    fig = create_scatter_matrix(df)
+    fig = create_scatter_matrix(filtered_df)
     st.plotly_chart(fig, use_container_width=True)
 
     # Scatter matrix explanation
