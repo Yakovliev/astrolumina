@@ -29,6 +29,8 @@ share/python-wheels/
 MANIFEST
 
 firebase-key.json
+secrets.toml
+*.streamlit
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
