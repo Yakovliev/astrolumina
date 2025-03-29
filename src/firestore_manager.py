@@ -27,7 +27,19 @@ class FirestoreManager:
             data['id'] = doc.id
             stars_data.append(data)
 
-        return pd.DataFrame(stars_data) if stars_data else pd.DataFrame()
+        # Create DataFrame
+        df = pd.DataFrame(stars_data) if stars_data else pd.DataFrame()
+
+        # Convert 'Star type' to proper format
+        if 'Star type' in df.columns:
+            # Check if it's numeric and needs mapping
+            if pd.api.types.is_numeric_dtype(df['Star type']):
+                from src.data_processing import star_type_mapping
+                df['Star type'] = df['Star type'].map(star_type_mapping)
+            # Ensure star type is string for consistent display
+            df['Star type'] = df['Star type'].astype(str)
+
+        return df
 
     def get_stars_by_type(self, star_type):
         """

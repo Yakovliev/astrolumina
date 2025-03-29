@@ -20,6 +20,13 @@ star_type_mapping = {
 
 def create_star_type_bar_chart(star_df):
     """Create a bar chart showing the count of each star type."""
+
+    # Make a copy to avoid modifying the original dataframe
+    star_df = star_df.copy()
+
+    # Ensure Star type is string for consistent handling
+    star_df['Star type'] = star_df['Star type'].astype(str)
+
     # Add star type labels if not already present
     if 'Star type label' not in star_df.columns and pd.api.types.is_numeric_dtype(star_df['Star type']):
         star_df['Star type label'] = star_df['Star type'].map(
@@ -66,6 +73,13 @@ def create_star_type_bar_chart(star_df):
 
 def create_star_color_bar_chart(star_df):
     """Create a bar chart showing the count of each star color."""
+
+    # Make a copy to avoid modifying the original dataframe
+    star_df = star_df.copy()
+
+    # Ensure Star color is string
+    star_df['Star color'] = star_df['Star color'].astype(str)
+
     # Calculating value counts for 'Star color'
     star_color_counts = star_df['Star color'].value_counts().reset_index()
     star_color_counts.columns = ['Star color', 'Count']
@@ -120,6 +134,13 @@ def create_star_color_bar_chart(star_df):
 
 def create_boxplots(star_df):
     """Create box plots for numeric features grouped by star type."""
+
+    # Make a copy to avoid modifying the original dataframe
+    star_df = star_df.copy()
+
+    # Ensure Star color is string
+    star_df['Star color'] = star_df['Star color'].astype(str)
+
     numeric_features = [
         'Temperature (K)', 'Luminosity(L/Lo)', 'Radius(R/Ro)', 'Absolute magnitude(Mv)']
 

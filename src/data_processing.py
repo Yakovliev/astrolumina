@@ -90,8 +90,11 @@ def load_star_data(use_firestore=True, file_path='data/cleaned_star_data.csv'):
         df = pd.read_csv(file_path)
 
     # Check if Star type is numeric and needs mapping
-    if 'Star type' in df.columns and pd.api.types.is_numeric_dtype(df['Star type']):
-        df['Star type'] = df['Star type'].map(star_type_mapping)
+    if 'Star type' in df.columns:
+        if pd.api.types.is_numeric_dtype(df['Star type']):
+            df['Star type'] = df['Star type'].map(star_type_mapping)
+        # Ensure star type is string (this is crucial for Plotly visualizations)
+        df['Star type'] = df['Star type'].astype(str)
 
     return df
 
