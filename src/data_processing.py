@@ -32,7 +32,7 @@
 
 import pandas as pd
 import os
-from src.firebase_config import get_firestore_db
+import streamlit as st
 
 # Map numeric Star type to category names if needed
 star_type_mapping = {
@@ -58,6 +58,14 @@ def load_star_data(use_firestore=True, file_path='data/cleaned_star_data.csv'):
     """
     if use_firestore:
         try:
+            # Try to import Firebase modules
+            try:
+                from src.firebase_config import get_firestore_db
+            except ImportError:
+                st.warning(
+                    "Firebase modules not available. Falling back to CSV.")
+                return load_star_data(use_firestore=False, file_path=file_path)
+
             # Get Firestore database client
             db = get_firestore_db()
 
@@ -101,29 +109,30 @@ def load_star_data(use_firestore=True, file_path='data/cleaned_star_data.csv'):
 
 def get_star_types():
     """
-    Get list of unique star types from Firestore.
+    Get list of unique star types from the data.
 
     Returns:
     list: List of unique star types
     """
     try:
-        db = get_firestore_db()
-        stars_ref = db.collection('stars')
+        # Try to use Firestore
+        try:
+            from src.firebase_config import get_firestore_db
+            db = get_firestore_db()
+            stars_ref = db.collection('stars')
+            docs = stars_ref.stream()
+            star_types = set()
 
-        # Get distinct values using group by query (if available)
-        # This is a simplification - Firestore doesn't support native SQL-like distinct queries
-        # For large collections, you might need a different approach
+            for doc in docs:
+                data = doc.to_dict()
+                if 'Star type' in data:
+                    star_types.add(data['Star type'])
 
-        # For now, we'll fetch all documents and extract unique values
-        docs = stars_ref.stream()
-        star_types = set()
-
-        for doc in docs:
-            data = doc.to_dict()
-            if 'Star type' in data:
-                star_types.add(data['Star type'])
-
-        return sorted(list(star_types))
+            return sorted(list(star_types))
+        except Exception:
+            # Fallback to CSV if Firestore fails
+            df = load_star_data(use_firestore=False)
+            return sorted(df['Star type'].unique().tolist())
 
     except Exception as e:
         print(f"Error fetching star types: {e}")

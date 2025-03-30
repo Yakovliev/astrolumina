@@ -2,21 +2,6 @@ import streamlit as st
 import pandas as pd
 import os
 
-# Import functions from our modules
-from src.firebase_config import initialize_firebase
-from src.firestore_manager import FirestoreManager
-from src.visualization import (
-    create_boxplots,
-    create_hr_diagram_improved,
-    create_scatter_matrix
-)
-
-# Initialize Firebase
-initialize_firebase()
-
-# Initialize Firestore Manager
-firestore_mgr = FirestoreManager()
-
 # Page configuration
 st.set_page_config(
     page_title="AstroLumina - Star Data Explorer",
@@ -33,23 +18,61 @@ in our catalog. Select different visualizations from the sidebar to learn more a
 colors, and their physical properties.
 """)
 
+# Initialize Firebase with error handling
+try:
+    # Import functions from our modules
+    from src.firebase_config import initialize_firebase
+    from src.firestore_manager import FirestoreManager
+    from src.visualization import (
+        create_boxplots,
+        create_hr_diagram_improved,
+        create_scatter_matrix
+    )
+
+    # Try to initialize Firebase
+    initialize_firebase()
+
+    # Initialize Firestore Manager
+    firestore_mgr = FirestoreManager()
+
+    firebase_initialized = True
+    st.success("Firebase connection established successfully!")
+except Exception as e:
+    firebase_initialized = False
+    st.error(f"Error connecting to Firebase: {e}")
+    st.warning("""
+    To fix this issue:
+    1. If running locally: Ensure you have firebase-key.json and .env file with FIREBASE_STORAGE_BUCKET
+    2. If on Streamlit Cloud: Configure secrets as described in the documentation
+    """)
+
+    # Import visualization functions even if Firebase fails
+    from src.visualization import (
+        create_boxplots,
+        create_hr_diagram_improved,
+        create_scatter_matrix
+    )
+
 # Load data
 
 
 @st.cache_data
 def get_data():
     """Load star data from Firestore with caching for performance."""
+    if firebase_initialized:
+        try:
+            df = firestore_mgr.get_all_stars()
+            if not df.empty:
+                return df
+        except Exception as e:
+            st.warning(f"Error loading data from Firestore: {e}")
+
+    # Fallback to CSV if Firestore is empty or unavailable
     try:
-        df = firestore_mgr.get_all_stars()
-        if df.empty:
-            st.warning(
-                "No data found in Firestore. Please run the data migration script.")
-            # Fallback to CSV if Firestore is empty
-            from src.data_processing import load_star_data
-            df = load_star_data(use_firestore=False)
-        return df
+        from src.data_processing import load_star_data
+        return load_star_data(use_firestore=False)
     except Exception as e:
-        st.error(f"Error loading data: {e}")
+        st.error(f"Error loading CSV data: {e}")
         st.stop()
 
 
@@ -62,10 +85,15 @@ except Exception as e:
 
 # Add sidebar for filters
 st.sidebar.title("Filters")
-star_types = ['All'] + firestore_mgr.get_unique_values('Star type')
-selected_star_type = st.sidebar.selectbox("Filter by Star Type", star_types)
+if firebase_initialized:
+    star_types = ['All'] + firestore_mgr.get_unique_values('Star type')
+    star_colors = ['All'] + firestore_mgr.get_unique_values('Star color')
+else:
+    # Fallback to getting unique values from the DataFrame
+    star_types = ['All'] + sorted(df['Star type'].unique().tolist())
+    star_colors = ['All'] + sorted(df['Star color'].unique().tolist())
 
-star_colors = ['All'] + firestore_mgr.get_unique_values('Star color')
+selected_star_type = st.sidebar.selectbox("Filter by Star Type", star_types)
 selected_star_color = st.sidebar.selectbox("Filter by Star Color", star_colors)
 
 # Apply filters
